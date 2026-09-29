@@ -2,6 +2,12 @@
 
 An open-source platform for discovering, organizing, and personalizing research funding opportunities.
 
+## Documentation
+
+View the full project documentation:
+
+https://jazlynsalazar.github.io/research-opportunity-platform/
+
 ## Project Goal
 
 Research funding information is spread across federal agencies, universities, professional societies, foundations, companies, and individual program websites.
