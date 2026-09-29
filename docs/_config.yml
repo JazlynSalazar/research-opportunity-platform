@@ -1,0 +1,15 @@
+title: Research Opportunity Platform
+description: Open-source research funding discovery, aggregation, and personalization platform
+
+theme: minima
+
+markdown: kramdown
+
+header_pages:
+  - index.md
+  - ARCHITECTURE.md
+  - DATA_SOURCES.md
+  - ROADMAP.md
+
+exclude:
+  - SESSION_NOTES.md

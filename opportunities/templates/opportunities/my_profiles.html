@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>My Research Profiles</title>
+
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        nav {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .logout-form {
+            margin-left: auto;
+        }
+
+        .logout-form button {
+            background: none;
+            border: none;
+            padding: 0;
+            text-decoration: underline;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .profile {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 18px;
+            margin: 16px 0;
+        }
+
+        .template {
+            background: #fafafa;
+        }
+
+        .archived {
+            opacity: 0.7;
+        }
+
+        .tag {
+            display: inline-block;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 4px 8px;
+            margin: 3px;
+        }
+
+        .message {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 12px 0;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .actions form {
+            margin: 0;
+        }
+
+        button,
+        .button-link {
+            display: inline-block;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .button-link {
+            border: 1px solid #aaa;
+            text-decoration: none;
+            color: inherit;
+            background: #f5f5f5;
+        }
+
+        .default {
+            font-weight: bold;
+        }
+
+        .muted {
+            color: #666;
+        }
+
+        .danger {
+            color: #a00;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <nav>
+
+        <a href="{% url 'discover' %}">
+            Discover
+        </a>
+
+        <a href="{% url 'my_profiles' %}">
+            My Research Profiles
+        </a>
+
+        <span>
+            Logged in as
+            <strong>
+                {{ request.user.username }}
+            </strong>
+        </span>
+
+        <form
+            class="logout-form"
+            method="post"
+            action="{% url 'logout' %}"
+        >
+            {% csrf_token %}
+
+            <button type="submit">
+                Log out
+            </button>
+        </form>
+
+    </nav>
+
+
+    <h1>
+        My Research Profiles
+    </h1>
+
+
+    <p class="muted">
+        Profiles are private to your account.
+        Use them to describe different research
+        interests and funding goals.
+    </p>
+
+
+    <p>
+        <a
+            class="button-link"
+            href="{% url 'create_profile' %}"
+        >
+            + Create blank profile
+        </a>
+    </p>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <h2>
+        Active Profiles
+    </h2>
+
+
+    {% for profile in active_profiles %}
+
+        <div class="profile">
+
+            <h3>
+                {{ profile.name }}
+
+                {% if profile.is_default %}
+                    <span class="default">
+                        — Default
+                    </span>
+                {% endif %}
+            </h3>
+
+            {% if profile.description %}
+                <p>
+                    {{ profile.description }}
+                </p>
+            {% endif %}
+
+            <p>
+                <strong>
+                    {{ profile.weights.count }}
+                </strong>
+                relevance signals
+            </p>
+
+            <div>
+
+                {% for weight in profile.weights.all %}
+
+                    <span class="tag">
+                        {{ weight.name }}
+                        — {{ weight.weight }}
+                    </span>
+
+                {% empty %}
+
+                    <span class="muted">
+                        No relevance signals yet.
+                    </span>
+
+                {% endfor %}
+
+            </div>
+
+
+            <div class="actions">
+
+                <a
+                    class="button-link"
+                    href="{% url 'edit_profile' profile.pk %}"
+                >
+                    Edit profile
+                </a>
+
+
+                {% if not profile.is_default %}
+
+                    <form
+                        method="post"
+                        action="{% url 'set_default_profile' profile.pk %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Set as default
+                        </button>
+                    </form>
+
+                {% endif %}
+
+
+                <form
+                    method="post"
+                    action="{% url 'duplicate_profile' profile.pk %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        Duplicate
+                    </button>
+                </form>
+
+
+                <form
+                    method="post"
+                    action="{% url 'toggle_profile_archive' profile.pk %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        Archive
+                    </button>
+                </form>
+
+
+                <form
+                    method="post"
+                    action="{% url 'delete_profile' profile.pk %}"
+                    onsubmit="return confirm('Delete this profile permanently?');"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        class="danger"
+                        type="submit"
+                    >
+                        Delete
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+
+    {% empty %}
+
+        <p>
+            You do not have an active research
+            profile yet.
+        </p>
+
+    {% endfor %}
+
+
+    {% if archived_profiles %}
+
+        <h2>
+            Archived Profiles
+        </h2>
+
+        {% for profile in archived_profiles %}
+
+            <div class="profile archived">
+
+                <h3>
+                    {{ profile.name }}
+                </h3>
+
+                <p>
+                    {{ profile.weights.count }}
+                    relevance signals
+                </p>
+
+                <div class="actions">
+
+                    <form
+                        method="post"
+                        action="{% url 'toggle_profile_archive' profile.pk %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Restore
+                        </button>
+                    </form>
+
+
+                    <form
+                        method="post"
+                        action="{% url 'delete_profile' profile.pk %}"
+                        onsubmit="return confirm('Delete this profile permanently?');"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            class="danger"
+                            type="submit"
+                        >
+                            Delete permanently
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <h2>
+        Starter Templates
+    </h2>
+
+
+    <p class="muted">
+        Templates are shared starting points.
+        Creating one makes a private copy in
+        your account.
+    </p>
+
+
+    {% for template in templates %}
+
+        <div class="profile template">
+
+            <h3>
+                {{ template.name }}
+            </h3>
+
+            {% if template.description %}
+                <p>
+                    {{ template.description }}
+                </p>
+            {% endif %}
+
+            <div>
+
+                {% for weight in template.weights.all %}
+
+                    <span class="tag">
+                        {{ weight.name }}
+                        — {{ weight.weight }}
+                    </span>
+
+                {% endfor %}
+
+            </div>
+
+
+            <div class="actions">
+
+                <form
+                    method="post"
+                    action="{% url 'copy_profile_template' template.pk %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        Create from this template
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+
+</body>
+
+</html>

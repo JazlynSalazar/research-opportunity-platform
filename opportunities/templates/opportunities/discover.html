@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Discover Opportunities</title>
+
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        nav {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 26px;
+        }
+
+        .logout-form {
+            margin-left: auto;
+        }
+
+        .logout-form button {
+            border: none;
+            background: none;
+            padding: 0;
+            text-decoration: underline;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .muted {
+            color: #666;
+        }
+
+        .filters {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 18px;
+            margin: 22px 0;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(190px, 1fr)
+                );
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .filter-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        input,
+        select {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 8px;
+        }
+
+        button {
+            padding: 8px 14px;
+            cursor: pointer;
+        }
+
+        .profile-summary {
+            border-left: 4px solid #ddd;
+            padding: 8px 14px;
+            margin: 18px 0;
+        }
+
+        .opportunity {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #eee;
+            border-radius: 5px;
+            padding: 4px 8px;
+            margin: 3px;
+        }
+
+        .approved-box {
+            border-left: 4px solid #555;
+            padding-left: 12px;
+            margin: 12px 0;
+        }
+
+        .provisional-box {
+            border-left: 4px dashed #999;
+            padding-left: 12px;
+            margin: 12px 0;
+        }
+
+        .cycle {
+            border-top: 1px solid #eee;
+            margin-top: 16px;
+            padding-top: 14px;
+        }
+
+        .eligibility {
+            border-left: 3px solid #ddd;
+            padding-left: 12px;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <nav>
+
+        <a href="{% url 'discover' %}">
+            Discover
+        </a>
+
+        <a href="{% url 'my_profiles' %}">
+            My Research Profiles
+        </a>
+
+        <span>
+            Logged in as
+            <strong>
+                {{ request.user.username }}
+            </strong>
+        </span>
+
+        <form
+            class="logout-form"
+            method="post"
+            action="{% url 'logout' %}"
+        >
+            {% csrf_token %}
+
+            <button type="submit">
+                Log out
+            </button>
+        </form>
+
+    </nav>
+
+
+    <h1>
+        Discover Opportunities
+    </h1>
+
+
+    {% if selected_profile %}
+
+        <div class="profile-summary">
+
+            <strong>
+                Ranking with:
+            </strong>
+
+            {{ selected_profile.name }}
+
+            {% if selected_profile.is_default %}
+                — Default profile
+            {% endif %}
+
+            <br>
+
+            <span class="muted">
+                {{ selected_profile.weights.count }}
+                relevance signals
+            </span>
+
+            ·
+
+            <a
+                href="{% url 'edit_profile' selected_profile.pk %}"
+            >
+                Edit this profile
+            </a>
+
+        </div>
+
+    {% endif %}
+
+
+    <p class="muted">
+        Approved relevance is based on human-reviewed
+        classifications. Provisional relevance uses current
+        automated classifications that have not yet been reviewed.
+        Neither score establishes eligibility or predicts funding success.
+    </p>
+
+
+    <form
+        method="get"
+        class="filters"
+    >
+
+        <div class="filter-grid">
+
+
+            <div class="filter-field">
+
+                <label for="profile">
+                    Research profile
+                </label>
+
+                <select
+                    id="profile"
+                    name="profile"
+                >
+
+                    {% for profile in profiles %}
+
+                        <option
+                            value="{{ profile.pk }}"
+                            {% if selected_profile_id == profile.pk %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ profile.name }}
+
+                            {% if profile.is_default %}
+                                — Default
+                            {% endif %}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="search">
+                    Search
+                </label>
+
+                <input
+                    id="search"
+                    type="search"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Genomics, robotics, education..."
+                >
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="mode">
+                    Relevance
+                </label>
+
+                <select
+                    id="mode"
+                    name="mode"
+                >
+
+                    <option
+                        value="all"
+                        {% if mode == "all" %}
+                            selected
+                        {% endif %}
+                    >
+                        All opportunities
+                    </option>
+
+                    <option
+                        value="relevant"
+                        {% if mode == "relevant" %}
+                            selected
+                        {% endif %}
+                    >
+                        Relevant to selected profile
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="source">
+                    Source
+                </label>
+
+                <select
+                    id="source"
+                    name="source"
+                >
+
+                    <option value="">
+                        All sources
+                    </option>
+
+                    {% for source in source_options %}
+
+                        <option
+                            value="{{ source.name }}"
+                            {% if source_name == source.name %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ source.name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="type">
+                    Opportunity type
+                </label>
+
+                <select
+                    id="type"
+                    name="type"
+                >
+
+                    <option value="">
+                        All types
+                    </option>
+
+                    {% for value, label in type_options %}
+
+                        <option
+                            value="{{ value }}"
+                            {% if opportunity_type == value %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ label }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-field">
+
+                <label for="status">
+                    Cycle status
+                </label>
+
+                <select
+                    id="status"
+                    name="status"
+                >
+
+                    <option value="">
+                        All statuses
+                    </option>
+
+                    {% for value, label in status_options %}
+
+                        <option
+                            value="{{ value }}"
+                            {% if cycle_status == value %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ label }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <button type="submit">
+            Apply filters
+        </button>
+
+        <a href="{% url 'discover' %}">
+            Clear filters
+        </a>
+
+    </form>
+
+
+    <p>
+        <strong>
+            {{ results|length }}
+        </strong>
+        opportunities shown
+    </p>
+
+
+    {% for result in results %}
+
+        <article class="opportunity">
+
+            <h2>
+                {{ result.opportunity.title }}
+            </h2>
+
+
+            <p>
+                <strong>Sponsor:</strong>
+                {{ result.opportunity.sponsor.name|default:"Not recorded" }}
+            </p>
+
+
+            <p>
+                <strong>Source:</strong>
+                {{ result.opportunity.source.name|default:"Not recorded" }}
+            </p>
+
+
+            <p>
+                <strong>Opportunity type:</strong>
+                {{ result.opportunity.get_opportunity_type_display }}
+            </p>
+
+
+            <div class="approved-box">
+
+                <strong>
+                    Approved relevance:
+                </strong>
+
+                {{ result.approved_score }}
+                points
+
+                {% if result.approved_matches %}
+
+                    <div>
+
+                        {% for tag in result.approved_matches %}
+
+                            <span class="tag">
+                                {{ tag }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="muted">
+                        No approved profile matches.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="provisional-box">
+
+                <strong>
+                    Provisional relevance:
+                </strong>
+
+                {{ result.provisional_score }}
+                points
+
+                <br>
+
+                <span class="muted">
+                    Automated and not yet human-reviewed.
+                </span>
+
+                {% if result.provisional_matches %}
+
+                    <div>
+
+                        {% for tag in result.provisional_matches %}
+
+                            <span class="tag">
+                                {{ tag }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            {% if result.pending_tags %}
+
+                <p class="muted">
+
+                    <strong>
+                        All unreviewed suggestions:
+                    </strong>
+
+                    {{ result.pending_tags|join:", " }}
+
+                </p>
+
+            {% endif %}
+
+
+            <p>
+                {{ result.opportunity.summary|default:"No summary available." }}
+            </p>
+
+
+            {% if result.opportunity.eligibility_notes %}
+
+                <div class="eligibility">
+
+                    <strong>
+                        Eligibility
+                    </strong>
+
+                    <p>
+                        {{ result.opportunity.eligibility_notes|linebreaksbr }}
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+
+            {% if result.opportunity.url %}
+
+                <p>
+                    <a
+                        href="{{ result.opportunity.url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View opportunity source
+                    </a>
+                </p>
+
+            {% endif %}
+
+
+            {% for cycle in result.opportunity.cycles.all %}
+
+                <div class="cycle">
+
+                    <strong>
+                        {{ cycle.cycle_name|default:"Funding cycle" }}
+                    </strong>
+
+                    <p>
+                        <strong>Source status:</strong>
+                        {{ cycle.get_status_display }}
+                    </p>
+
+                    {% if cycle.last_verified %}
+
+                        <p>
+                            <strong>Last verified:</strong>
+                            {{ cycle.last_verified|date:"M j, Y" }}
+                        </p>
+
+                    {% endif %}
+
+                    {% for deadline in cycle.deadlines.all %}
+
+                        <p>
+
+                            <strong>
+                                {{ deadline.get_deadline_type_display }}:
+                            </strong>
+
+                            {{ deadline.date|date:"M j, Y"|default:"Date not recorded" }}
+
+                            {% if deadline.notes %}
+                                <br>
+                                <span class="muted">
+                                    {{ deadline.notes }}
+                                </span>
+                            {% endif %}
+
+                        </p>
+
+                    {% empty %}
+
+                        <p class="muted">
+                            No deadline recorded.
+                        </p>
+
+                    {% endfor %}
+
+                    {% if cycle.source_url %}
+
+                        <p>
+                            <a
+                                href="{{ cycle.source_url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                View cycle source
+                            </a>
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+            {% empty %}
+
+                <p class="muted">
+                    No funding cycles recorded yet.
+                </p>
+
+            {% endfor %}
+
+        </article>
+
+
+    {% empty %}
+
+        <p>
+            No opportunities match the selected filters.
+        </p>
+
+    {% endfor %}
+
+
+</body>
+
+</html>

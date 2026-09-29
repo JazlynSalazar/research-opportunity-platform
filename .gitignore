@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+*.sqlite3
+.env
+.venv/
+
+# Local development backups
+*.bak
+*.before-*
+.pipeline-update.lock
+backups/
+
+# macOS
+.DS_Store
+
+# Local environment
+.env
+

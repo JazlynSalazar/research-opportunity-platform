@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% if profile %}
+            Edit {{ profile.name }}
+        {% else %}
+            Create Research Profile
+        {% endif %}
+    </title>
+
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        nav {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        input,
+        textarea,
+        select {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 600px;
+            padding: 9px;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .signal {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .muted {
+            color: #666;
+        }
+
+        .message {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <nav>
+
+        <a href="{% url 'discover' %}">
+            Discover
+        </a>
+
+        <a href="{% url 'my_profiles' %}">
+            My Research Profiles
+        </a>
+
+    </nav>
+
+
+    {% if profile %}
+
+        <h1>
+            Edit Research Profile
+        </h1>
+
+    {% else %}
+
+        <h1>
+            Create Research Profile
+        </h1>
+
+    {% endif %}
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <div class="card">
+
+        <h2>
+            Profile details
+        </h2>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit">
+                {% if profile %}
+                    Save profile details
+                {% else %}
+                    Create profile
+                {% endif %}
+            </button>
+
+        </form>
+
+    </div>
+
+
+    {% if profile %}
+
+        <div class="card">
+
+            <h2>
+                Relevance Signals
+            </h2>
+
+            <p class="muted">
+                Signals describe what this profile
+                cares about. Higher importance gives
+                that signal more ranking points.
+            </p>
+
+
+            {% for weight in profile.weights.all %}
+
+                <div class="signal">
+
+                    <div>
+
+                        <strong>
+                            {{ weight.name }}
+                        </strong>
+
+                        <br>
+
+                        <span class="muted">
+                            {{ weight.get_category_display }}
+                            · Weight {{ weight.weight }}
+                        </span>
+
+                    </div>
+
+
+                    <form
+                        method="post"
+                        action="{% url 'remove_profile_weight' profile.pk weight.pk %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Remove
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+            {% empty %}
+
+                <p class="muted">
+                    This profile does not have any
+                    relevance signals yet.
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>
+                Add or Update a Signal
+            </h2>
+
+            <p class="muted">
+                Choose a category and use an existing
+                signal name when possible. You may also
+                enter a new signal, although it will only
+                affect ranking once the opportunity
+                classifier produces the same category
+                and name.
+            </p>
+
+
+            <form
+                method="post"
+                action="{% url 'add_profile_weight' profile.pk %}"
+            >
+
+                {% csrf_token %}
+
+                {{ weight_form.as_p }}
+
+                <datalist id="signal-suggestions">
+
+                    {% for category, name in signal_suggestions %}
+
+                        <option value="{{ name }}">
+                            {{ category }}
+                        </option>
+
+                    {% endfor %}
+
+                </datalist>
+
+                <button type="submit">
+                    Add or update signal
+                </button>
+
+            </form>
+
+        </div>
+
+    {% endif %}
+
+
+</body>
+
+</html>
