@@ -1,3 +1,8 @@
+---
+layout: default
+title: Local Setup
+---
+
 # Local Development Setup
 
 This guide describes how to run the Research Opportunity Platform locally for development.

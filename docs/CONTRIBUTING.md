@@ -1,3 +1,8 @@
+---
+layout: default
+title: Contributing
+---
+
 # Contributing to the Research Opportunity Platform
 
 Thank you for your interest in contributing to the Research Opportunity Platform.

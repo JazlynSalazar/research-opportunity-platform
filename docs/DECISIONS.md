@@ -1,3 +1,8 @@
+---
+layout: default
+title: Design Decisions
+---
+
 # Project Design Decisions
 
 This document records important architectural and product decisions made during development of the Research Opportunity Platform.

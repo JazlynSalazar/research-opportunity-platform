@@ -1,3 +1,8 @@
+---
+layout: default
+title: Architecture
+---
+
 # Research Opportunity Platform Architecture
 
 This document describes the architecture of the Research Opportunity Platform and the design principles used to move funding information from external sources into a shared, personalized discovery system.

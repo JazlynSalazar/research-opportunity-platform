@@ -1,3 +1,8 @@
+---
+layout: default
+title: Funding Data Sources
+---
+
 # Funding Data Sources
 
 This document tracks funding-source integrations for the Research Opportunity Platform.

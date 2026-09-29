@@ -1,3 +1,8 @@
+---
+layout: default
+title: Development Log
+---
+
 # Development Log
 
 This document records major milestones in the development of the Research Opportunity Platform.

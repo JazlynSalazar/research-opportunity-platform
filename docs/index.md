@@ -1,3 +1,8 @@
+---
+layout: default
+title: Research Opportunity Platform
+---
+
 # Research Opportunity Platform
 
 An open-source platform for discovering, organizing, and personalizing research funding opportunities.
